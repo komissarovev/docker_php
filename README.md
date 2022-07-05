@@ -1,0 +1,1 @@
+nginx + php + mysql + phpmyadmin
