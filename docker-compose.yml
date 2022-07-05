@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  php:
+    build: ./php
+    container_name: tools_php-php
+    environment:
+      - MYSQL_HOST=mysql 
+      - MYSQL_DATABASE=test_db 
+      - MYSQL_USER=user1
+      - MYSQL_PASSWORD=s123
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./src:/var/www
+    depends_on:
+      - mysql  
+    networks:
+      - tools_php-network
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: tools_php-nginx
+    restart: unless-stopped
+    ports:
+      - 80:80
+    volumes:
+      - ./src:/var/www
+      - ./nginx:/etc/nginx/conf.d 
+    depends_on:
+      - php 
+    networks:
+      - tools_php-network  
+
+  mysql:
+    image: mysql:8.0.29
+    container_name: tools_php-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=s123123
+    volumes:
+      - mysql_php:/mysql.sql  
+    networks:
+      - tools_php-network
+
+  phpmyadmin:
+    image: phpmyadmin:latest 
+    container_name: tools_php-phpmyadmin
+    restart: unless-stopped
+    environment:
+      - PMA_ARBITRARY=1
+      - UPLOAD_LIMIT=1024M
+      - MEMORY_LIMIT=1024M
+      - MAX_EXECUTION_TIME=300  
+    ports:
+      - 8000:80
+    depends_on:
+      - mysql 
+    networks:
+      - tools_php-network        
+
+volumes:
+  mysql_php:
+
+networks:
+  tools_php-network:
+    driver: bridge
